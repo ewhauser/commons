@@ -66,7 +66,7 @@ public class DeadlineCaller extends CallerDecorator {
   @Override
   public Object call(final Method method, final Object[] args,
       @Nullable final AsyncMethodCallback callback,
-      @Nullable final Amount<Long, Time> connectTimeoutOverride) throws Throwable {
+      @Nullable final Amount<Long, Time> connectTimeoutOverride) throws Exception {
     try {
       Future<Object> result = executorService.submit(new Callable<Object>() {
         @Override public Object call() throws Exception {
@@ -85,12 +85,10 @@ public class DeadlineCaller extends CallerDecorator {
         result.cancel(true);
         throw new TTimeoutException(e);
       } catch (ExecutionException e) {
-        throw e.getCause();
+        throw Throwables.propagate(e.getCause());
       }
     } catch (RejectedExecutionException e) {
       throw new TResourceExhaustedException(e);
-    } catch (InvocationTargetException e) {
-      throw e.getCause();
     }
   }
 }

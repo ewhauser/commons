@@ -94,36 +94,36 @@ public class RetryingCaller extends CallerDecorator {
 
   @Override public Object call(final Method method, final Object[] args,
       @Nullable final AsyncMethodCallback callback,
-      @Nullable final Amount<Long, Time> connectTimeoutOverride) throws Throwable {
+      @Nullable final Amount<Long, Time> connectTimeoutOverride) throws Exception {
     final AtomicLong retryCounter = stats.get(method);
     final AtomicInteger attempts = new AtomicInteger();
-    final List<Throwable> exceptions = Lists.newArrayList();
+    final List<Exception> exceptions = Lists.newArrayList();
 
     final ResultCapture capture = new ResultCapture() {
       @Override public void success() {
         // No-op.
       }
 
-      @Override public boolean fail(Throwable t) {
-        if (!isRetryable(t)) {
+      @Override public boolean fail(Exception e) {
+        if (!isRetryable(e)) {
           if (debug) {
             LOG.warning(String.format(
                 "Call failed with un-retryable exception of [%s]: %s, previous exceptions: %s",
-                t.getClass().getName(), t.getMessage(), combineStackTraces(exceptions)));
+                e.getClass().getName(), e.getMessage(), combineStackTraces(exceptions)));
           }
 
           return true;
         } else if (attempts.get() >= retries) {
-          exceptions.add(t);
+          exceptions.add(e);
 
           if (debug) {
             LOG.warning(String.format("Retried %d times, last error: %s, exceptions: %s",
-                attempts.get(), t, combineStackTraces(exceptions)));
+                attempts.get(), e, combineStackTraces(exceptions)));
           }
 
           return true;
         } else {
-          exceptions.add(t);
+          exceptions.add(e);
 
           if (isAsync() && attempts.incrementAndGet() <= retries) {
             try {
@@ -131,7 +131,7 @@ public class RetryingCaller extends CallerDecorator {
               // override connect timeout in ThriftCaller to prevent blocking for a connection
               // for async retries (since this is within the callback in the selector thread)
               invoke(method, args, callback, this, NONBLOCKING_TIMEOUT);
-            } catch (Throwable throwable) {
+            } catch (Exception throwable) {
               return fail(throwable);
             }
           }
@@ -146,9 +146,9 @@ public class RetryingCaller extends CallerDecorator {
       try {
         // If this is an async call, the looping will be handled within the capture.
         return invoke(method, args, callback, capture, connectTimeoutOverride);
-      } catch (Throwable t) {
+      } catch (Exception t) {
         if (!isRetryable(t)) {
-          Throwable propagated = t;
+          Exception propagated = t;
 
           if (!exceptions.isEmpty() && (t instanceof TResourceExhaustedException)) {
             // If we've been trucking along through retries that have had remote call failures
@@ -170,7 +170,7 @@ public class RetryingCaller extends CallerDecorator {
       if (continueLoop) retryCounter.incrementAndGet();
     } while (continueLoop);
 
-    Throwable lastRetriedException = Iterables.getLast(exceptions);
+    Exception lastRetriedException = Iterables.getLast(exceptions);
     if (debug) {
       if (!exceptions.isEmpty()) {
         LOG.warning(
@@ -210,14 +210,14 @@ public class RetryingCaller extends CallerDecorator {
 
   private static final Joiner STACK_TRACE_JOINER = Joiner.on('\n');
 
-  private static String combineStackTraces(List<Throwable> exceptions) {
+  private static String combineStackTraces(List<Exception> exceptions) {
     if (exceptions.isEmpty()) {
       return "none";
     } else {
       return STACK_TRACE_JOINER.join(Iterables.transform(exceptions,
-          new Function<Throwable, String>() {
+          new Function<Exception, String>() {
             private int index = 1;
-            @Override public String apply(Throwable exception) {
+            @Override public String apply(Exception exception) {
               return String.format("[%d] %s",
                   index++, Throwables.getStackTraceAsString(exception));
             }

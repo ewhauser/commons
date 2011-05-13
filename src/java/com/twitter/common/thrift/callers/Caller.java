@@ -40,10 +40,10 @@ public interface Caller {
    * @param callback The callback to use if the method is asynchronous.
    * @param connectTimeoutOverride Optional override for the default connection timeout.
    * @return The return value from invoking the method.
-   * @throws Throwable Exception, as prescribed by the method's contract.
+   * @throws Exception Exception, as prescribed by the method's contract.
    */
   public Object call(Method method, Object[] args, @Nullable AsyncMethodCallback callback,
-      @Nullable Amount<Long, Time> connectTimeoutOverride) throws Throwable;
+      @Nullable Amount<Long, Time> connectTimeoutOverride) throws Exception;
 
   /**
    * Captures the result of a request, whether synchronous or asynchronous.  It should be expected
@@ -58,11 +58,11 @@ public interface Caller {
     /**
      * Called when the request failed.
      *
-     * @param t Throwable that was caught.  Must never be null.
+     * @param e Exception that was caught.  Must never be null.
      * @return {@code true} if a wrapped callback should be notified of the failure,
      *    {@code false} otherwise.
      */
-    boolean fail(Throwable t);
+    boolean fail(Exception e);
   }
 
   /**
@@ -92,9 +92,9 @@ public interface Caller {
       callbackTriggered();
     }
 
-    @Override public void onError(Throwable t) {
-      if (capture.fail(t)) {
-        wrapped.onError(t);
+    @Override public void onError(Exception e) {
+      if (capture.fail(e)) {
+        wrapped.onError(e);
         callbackTriggered();
       }
     }

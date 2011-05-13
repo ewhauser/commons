@@ -218,8 +218,8 @@ public class ThriftFactoryTest extends TearDownTestCase {
       }
 
       @Override
-      public void onError(Throwable throwable) {
-        responseHolder[0] = throwable.toString();
+      public void onError(Exception exception) {
+        responseHolder[0] = exception.toString();
         done.countDown();
       }
     };

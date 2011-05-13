@@ -17,13 +17,11 @@
 package com.twitter.common.thrift.callers;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
 import com.twitter.common.quantity.Amount;
 import com.twitter.common.quantity.Time;
 import org.apache.thrift.async.AsyncMethodCallback;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
@@ -49,13 +47,13 @@ public class DebugCaller extends CallerDecorator {
   @Override
   public Object call(final Method method, final Object[] args,
       @Nullable AsyncMethodCallback callback, @Nullable Amount<Long, Time> connectTimeoutOverride)
-      throws Throwable {
+      throws Exception {
     ResultCapture capture = new ResultCapture() {
       @Override public void success() {
         // No-op.
       }
 
-      @Override public boolean fail(Throwable t) {
+      @Override public boolean fail(Exception e) {
         StringBuilder message = new StringBuilder("Thrift call failed: ");
         message.append(method.getName()).append("(");
         ARG_JOINER.appendTo(message, args);
@@ -68,9 +66,9 @@ public class DebugCaller extends CallerDecorator {
 
     try {
       return invoke(method, args, callback, capture, connectTimeoutOverride);
-    } catch (Throwable t) {
-      capture.fail(t);
-      throw t;
+    } catch (Exception e) {
+      capture.fail(e);
+      throw e;
     }
   }
 }

@@ -71,8 +71,8 @@ public class StatTrackingCaller extends CallerDecorator {
 
   @Override
   public Object call(Method method, Object[] args, @Nullable AsyncMethodCallback callback,
-      @Nullable Amount<Long, Time> connectTimeoutOverride) throws Throwable {
-    final RequestTimer requestStats = stats.get(method);
+      @Nullable Amount<Long, Time> connectTimeoutOverride) throws Exception {
+    final StatsProvider.RequestTimer requestStats = stats.get(method);
     final long startTime = System.nanoTime();
 
     ResultCapture capture = new ResultCapture() {
@@ -81,17 +81,17 @@ public class StatTrackingCaller extends CallerDecorator {
             System.nanoTime() - startTime));
       }
 
-      @Override public boolean fail(Throwable t) {
+      @Override public boolean fail(Exception e) {
         // TODO(John Sirois): the ruby client reconnects for timeouts too - this provides a natural
         // backoff mechanism - consider how to plumb something similar.
-        if (t instanceof TTimeoutException || t instanceof TimeoutException) {
+        if (e instanceof TTimeoutException || e instanceof TimeoutException) {
           requestStats.incTimeouts();
           return true;
         }
 
         // TODO(John Sirois): consider ditching reconnects since its nearly redundant with errors as
         // it stands.
-        if (!(t instanceof TResourceExhaustedException)) {
+        if (!(e instanceof TResourceExhaustedException)) {
           requestStats.incReconnects();
         }
         // TODO(John Sirois): provide more detailed stats: track counts for distinct exceptions types,

@@ -696,7 +696,7 @@ public class ThriftTest {
     expectConnectionPoolResourceExhausted(ASYNC_CONNECT_TIMEOUT);
     Thrift<TestServiceAsync> thrift = createAsyncThrift(expectUnusedExecutorService());
 
-    callback.onError((Throwable) and(anyObject(), isA(TResourceExhaustedException.class)));
+    callback.onError((Exception) and(anyObject(), isA(TResourceExhaustedException.class)));
 
     control.replay();
 
@@ -715,7 +715,7 @@ public class ThriftTest {
 
     Thrift<TestServiceAsync> thrift = createAsyncThrift(expectUnusedExecutorService());
 
-    callback.onError((Throwable) and(anyObject(), isA(TResourceExhaustedException.class)));
+    callback.onError((Exception) and(anyObject(), isA(TResourceExhaustedException.class)));
 
     control.replay();
 

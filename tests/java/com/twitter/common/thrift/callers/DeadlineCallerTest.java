@@ -60,7 +60,7 @@ public class DeadlineCallerTest extends AbstractCallerTest {
     Caller sleepyCaller = new CallerDecorator(caller, false) {
       @Override public Object call(Method method, Object[] args,
           @Nullable AsyncMethodCallback callback,
-          @Nullable Amount<Long, Time> connectTimeoutOverride) throws Throwable {
+          @Nullable Amount<Long, Time> connectTimeoutOverride) throws Exception {
 
         if (shouldTimeOut) {
           try {

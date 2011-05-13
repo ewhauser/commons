@@ -17,15 +17,16 @@
 package com.twitter.common.thrift.callers;
 
 import com.google.common.base.Function;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.twitter.common.net.loadbalancing.RequestTracker;
 import com.twitter.common.net.pool.Connection;
 import com.twitter.common.net.pool.ObjectPool;
+import com.twitter.common.net.pool.ResourceExhaustedException;
 import com.twitter.common.quantity.Amount;
 import com.twitter.common.quantity.Time;
-import com.twitter.common.net.pool.ResourceExhaustedException;
 import com.twitter.common.thrift.TResourceExhaustedException;
 import com.twitter.common.thrift.TTimeoutException;
-import com.twitter.common.net.loadbalancing.RequestTracker;
 import org.apache.thrift.async.AsyncMethodCallback;
 import org.apache.thrift.transport.TTransport;
 
@@ -73,7 +74,7 @@ public class ThriftCaller<T> implements Caller {
 
   @Override
   public Object call(Method method, Object[] args, @Nullable AsyncMethodCallback callback,
-      @Nullable Amount<Long, Time> connectTimeoutOverride) throws Throwable {
+      @Nullable Amount<Long, Time> connectTimeoutOverride) throws Exception {
 
     final Connection<TTransport, InetSocketAddress> connection = getConnection(connectTimeoutOverride);
     final long startNanos = System.nanoTime();
@@ -88,9 +89,9 @@ public class ThriftCaller<T> implements Caller {
         }
       }
 
-      @Override public boolean fail(Throwable t) {
+      @Override public boolean fail(Exception e) {
         if (debug) {
-          LOG.warning(String.format("Call to endpoint: %s failed: %s", connection, t));
+          LOG.warning(String.format("Call to endpoint: %s failed: %s", connection, e));
         }
 
         try {
@@ -107,7 +108,7 @@ public class ThriftCaller<T> implements Caller {
   }
 
   private static Object invokeMethod(Object target, Method method, Object[] args,
-      AsyncMethodCallback callback, final ResultCapture capture) throws Throwable {
+      AsyncMethodCallback callback, final ResultCapture capture) throws Exception {
 
     // Swap the wrapped callback out for ours.
     if (callback != null) {
@@ -123,14 +124,15 @@ public class ThriftCaller<T> implements Caller {
       if (callback == null) capture.success();
 
       return result;
-    } catch (InvocationTargetException t) {
+    } catch (InvocationTargetException e) {
       // We allow this one to go to both sync and async captures.
+      Exception cause = (Exception)e.getCause();
       if (callback != null) {
-        callback.onError(t.getCause());
+        callback.onError(cause);
         return null;
       } else {
-        capture.fail(t.getCause());
-        throw t.getCause();
+        capture.fail(cause);
+        throw Throwables.propagate(e);
       }
     }
   }
