@@ -12,7 +12,7 @@ java_library(name = 'angrybird-lib',
     'src/java/com/twitter/common/zookeeper:testing',
     'src/thrift/com/twitter/common/zookeeper/testing/angrybird',
   ],
-  sources = globs('*.java'),
+  #sources = globs('*.java'),
 )
 
 jvm_binary(name = 'angrybird',

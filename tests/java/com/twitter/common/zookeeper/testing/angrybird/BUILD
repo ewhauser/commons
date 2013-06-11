@@ -7,5 +7,5 @@ java_tests(name = 'angrybird',
     'src/java/com/twitter/common/zookeeper/testing/angrybird:angrybird-lib',
     'src/java/com/twitter/common/zookeeper:client',
   ],
-  sources = rglobs('*.java'),
+  #sources = rglobs('*.java'),
 )

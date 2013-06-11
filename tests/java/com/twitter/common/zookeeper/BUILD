@@ -67,7 +67,7 @@ java_tests(name = 'medium-main',
 
 jar_library(name = 'medium',
   dependencies = [
-    'tests/java/com/twitter/common/zookeeper/testing/angrybird',
+    #'tests/java/com/twitter/common/zookeeper/testing/angrybird',
     ':medium-main',
   ]
 )

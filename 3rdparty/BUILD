@@ -343,14 +343,14 @@ jar_library(name = 'thrift-0.5.0-finagle',
             ]
            )
 
-jar_library(name = 'thrift-0.8.0',
+jar_library(name = 'thrift-0.9.0',
             dependencies = [
-	      jar(org = 'org.apache.thrift', name = 'libthrift', rev = '0.8.0'),
+	      jar(org = 'org.apache.thrift', name = 'libthrift', rev = '0.9.0'),
             ]
            )
 
 jar_library(name = 'thrift',
-            dependencies = [ pants(':thrift-0.8.0') ])
+            dependencies = [ pants(':thrift-0.9.0') ])
 
 jar_library(name = 'twitter4j',
             dependencies = [
